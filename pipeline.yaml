@@ -1,493 +1,247 @@
 AWSTemplateFormatVersion: 2010-09-09
-
 Description: a206153-trademark-images Code CI/CD pipeline
-
 Parameters:
-
   ArtifactBucket:
-
     Type: String
-
   DeployRoleArn:
-
     Type: String
-
   BuildRoleArn:
-
     Type: String
-
   AssetInsightId:
-
     Type: String
-
   ServiceName:
-
     Type: String
-
   ProjectName:
-
     Type: String
-
   Region:
-
     Type: String
-
     Default: use1
-
   GitHubProjectName:
-
     Type: String
-
   GitHubSecretName:
-
     Type: String
-
   GitHubSecretKey:
-
     Type: String
-
   OAuthTokenKey:
-
     Type: String
-
   FinancialIdentifier:
-
     Type: String
-
   NonProdVpcId:
-
     Type: String
-
   NonProdPrivateSubnets:
-
     Type: "List<AWS::EC2::Subnet::Id>"
-
   AccountId:
-
     Type: String
-
   ResourceOwner:
-
     Type: String
-
   EnvironmentType:
-
     Type: String
-
 Resources:
-
   AppBuild:
-
     Type: "AWS::CodeBuild::Project"
-
     Properties:
-
       Name:
-
         Fn::Sub: "a${AssetInsightId}-${ServiceName}-${ProjectName}-Build-${Region}"
-
       ServiceRole:
-
         Ref: "BuildRoleArn"
-
       Artifacts:
-
         ArtifactIdentifier: "APP"
-
         Type: "CODEPIPELINE"
-
         Packaging: "ZIP"
-
       Environment:
-
         Type: "LINUX_CONTAINER"
-
         ComputeType: "BUILD_GENERAL1_SMALL"
-
         Image: "aws/codebuild/standard:2.0"
-
         PrivilegedMode: true
-
         EnvironmentVariables:
-
           - Name: "SECURITY_GROUP_ID"
-
             Value:
-
               Ref: "BuildSecurityGroup"
-
           - Name: "SUBNET_ID"
-
             Value:
-
               Fn::Select: [0, {"Ref": "NonProdPrivateSubnets"}]
-
           - Name: "VPC_ID"
-
             Value:
-
               Ref: "NonProdVpcId"
-
           - Name: "ASSET_ID"
-
             Value:
-
               Ref: "AssetInsightId"
-
           - Name: "FINANCIAL_ID"
-
             Value:
-
               Ref: "FinancialIdentifier"
-
           - Name: "ENVIRONMENT_TYPE"
-
             Value:
-
               Ref: "EnvironmentType"
-
           - Name: "RESOURCE_OWNER"
-
             Value:
-
               Ref: "ResourceOwner"
-
           - Name: "REGION"
-
             Value:
-
               Ref: "AWS::Region"
-
           - Name: "ACCOUNT_ID"
-
             Value:
-
               Ref: "AccountId"
-
       Source:
-
         BuildSpec: "buildspec.yml"
-
         Type: "CODEPIPELINE"
-
       LogsConfig:
-
         CloudWatchLogs:
-
           Status: ENABLED
-
       TimeoutInMinutes: 30
-
       VpcConfig:
-
         SecurityGroupIds: [{Ref: "BuildSecurityGroup"}]
-
         Subnets:
-
           Ref: "NonProdPrivateSubnets"
-
         VpcId:
-
           Ref: "NonProdVpcId"
-
       Tags:
-
         - Key: "tr:application-asset-insight-id"
-
           Value: !Ref AssetInsightId
-
         - Key: "tr:financial-identifier"
-
           Value: !Ref FinancialIdentifier
-
   BuildSecurityGroup:
-
       Type: "AWS::EC2::SecurityGroup"
-
       Properties:
-
         GroupDescription: "Security group that is applied to build resources"
-
         SecurityGroupEgress:
-
           - IpProtocol: -1
-
             FromPort: -1
-
             ToPort: -1
-
             CidrIp: "0.0.0.0/0"
-
         Tags:
-
           - Key: "tr:application-asset-insight-id"
-
             Value:
-
               Ref: "AssetInsightId"
-
           - Key: "tr:financial-identifier"
-
             Value:
-
               Ref: "FinancialIdentifier"
-
           - Key: "tr:environment-type"
-
             Value:
-
               Ref: "EnvironmentType"
-
           - Key: "tr:resource-owner"
-
             Value:
-
               Ref: "ResourceOwner"
-
         VpcId:
-
           Ref: "NonProdVpcId"
-
   SelfRule:
-
     Type: "AWS::EC2::SecurityGroupIngress"
-
     Properties:
-
       Description: "Allow resources in group to talk to eachother"
-
       IpProtocol: -1
-
       FromPort: -1
-
       ToPort: -1
-
       GroupId:
-
         Ref: "BuildSecurityGroup"
-
       SourceSecurityGroupId:
-
         Ref: "BuildSecurityGroup"
-
   DeploymentPipeline:
-
     Type: 'AWS::CodePipeline::Pipeline'
-
     Properties:
-
       ArtifactStore:
-
         Location:
-
           Fn::Sub: ${ArtifactBucket}
-
         Type: S3
-
       Name: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-deployment-${Region}
-
       RoleArn:
-
         Ref: "BuildRoleArn"
-
       Stages:
-
         - Name: Source
-
           Actions:
-
             - Name: Source
-
               ActionTypeId:
-
                 Category: Source
-
                 Owner: ThirdParty
-
                 Provider: GitHub
-
                 Version: 1
-
               Configuration:
-
                 Owner: tr
-
                 Repo: !Ref GitHubProjectName
-
                 PollForSourceChanges: false
-
                 Branch: master
-
                 OAuthToken: !Sub "{{resolve:secretsmanager:${GitHubSecretName}:SecretString:${OAuthTokenKey}}}"
-
               OutputArtifacts:
-
                 - Name: SOURCE
-
               RunOrder: 1
-
         - Name: app-Build
-
           Actions:
-
             - Name: app-Build
-
               ActionTypeId:
-
                 Category: Build
-
                 Owner: AWS
-
                 Provider: CodeBuild
-
                 Version: 1
-
               Configuration:
-
                 ProjectName: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-Build-${Region}
-
               InputArtifacts:
-
                 - Name: SOURCE
-
               OutputArtifacts:
-
                 - Name: APP
-
               RunOrder: 1
-
         - Name: ci-App-Deploy
-
           Actions:
-
             - Name: ci-App-Deploy
-
               ActionTypeId:
-
                 Category: Deploy
-
                 Owner: AWS
-
                 Provider: CloudFormation
-
                 Version: 1
-
               Configuration:
-
                 ActionMode: CREATE_UPDATE
-
                 Capabilities: 'CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND'
-
                 RoleArn: !Ref DeployRoleArn
-
                 StackName: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-Deploy-ci-${Region}
-
                 TemplateConfiguration: 'APP::config/ci/params.json'
-
                 TemplatePath: 'APP::packaged-template.yaml'
-
               InputArtifacts:
-
                 - Name: APP
-
               RunOrder: 1
-
         - Name: qa-Approval
-
           Actions:
-
             - Name: qa-Approval
-
               ActionTypeId:
-
                 Category: Approval
-
                 Owner: AWS
-
                 Provider: Manual
-
                 Version: 1
-
               Configuration:
-
                 CustomData: Approve to move this change to QA
-
               RunOrder: 1
-
         - Name: qa-App-Deploy
-
           Actions:
-
             - Name: qa-App-Deploy
-
               ActionTypeId:
-
                 Category: Deploy
-
                 Owner: AWS
-
                 Provider: CloudFormation
-
                 Version: 1
-
               Configuration:
-
                 ActionMode: CREATE_UPDATE
-
                 Capabilities: 'CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND'
-
                 RoleArn: !Ref BuildRoleArn
-
                 StackName: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-Deploy-qa-${Region}
-
                 TemplateConfiguration: 'APP::config/qa/params.json'
-
                 TemplatePath: 'APP::config/packaged-template.yaml'
-
               InputArtifacts:
-
                 - Name: APP
-
               RunOrder: 1
-
   GitHubWebhook:
-
     Type: AWS::CodePipeline::Webhook
-
     Properties:
-
       AuthenticationConfiguration:
-
         SecretToken: !Sub "{{resolve:secretsmanager:${GitHubSecretName}:SecretString:${GitHubSecretKey}}}"
-
       Filters:
-
         - JsonPath: "$.ref"
-
           MatchEquals: refs/heads/master
-
       Authentication: GITHUB_HMAC
-
       TargetPipeline: !Ref DeploymentPipeline
-
       TargetAction: Source
-
       Name: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-Webhook
-
       TargetPipelineVersion: !GetAtt DeploymentPipeline.Version
-
       RegisterWithThirdParty: 'true'
-
 Outputs:
-
   PipelineArn:
-
     Description: Deployment Pipeline
-
     Value: !Ref DeploymentPipeline
-
   BuildArn:
-
     Description: AppBuild
-
     Value: !Ref AppBuild
