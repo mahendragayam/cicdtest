@@ -3,19 +3,15 @@ Description: a206153-trademark-images Code CI/CD pipeline
 Parameters:
   ArtifactBucket:
     Type: String
-  DeployRoleArn:
+  CodepipelineRoleArn:
     Type: String
-  BuildRoleArn:
-    Type: String
-  AssetInsightId:
-    Type: String
-  ServiceName:
+  MyLambdaRoleArn:
     Type: String
   ProjectName:
     Type: String
   Region:
     Type: String
-    Default: use1
+    Default: ap-south-1
   GitHubProjectName:
     Type: String
   GitHubSecretName:
@@ -24,12 +20,6 @@ Parameters:
     Type: String
   OAuthTokenKey:
     Type: String
-  FinancialIdentifier:
-    Type: String
-  NonProdVpcId:
-    Type: String
-  NonProdPrivateSubnets:
-    Type: "List<AWS::EC2::Subnet::Id>"
   AccountId:
     Type: String
   ResourceOwner:
@@ -41,7 +31,7 @@ Resources:
     Type: "AWS::CodeBuild::Project"
     Properties:
       Name:
-        Fn::Sub: "a${AssetInsightId}-${ServiceName}-${ProjectName}-Build-${Region}"
+        Fn::Sub: "${ProjectName}-Build-${Region}"
       ServiceRole:
         Ref: "BuildRoleArn"
       Artifacts:
