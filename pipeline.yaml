@@ -33,7 +33,7 @@ Resources:
       Name:
         Fn::Sub: "${ProjectName}-Build-${Region}"
       ServiceRole:
-        Ref: "BuildRoleArn"
+        Ref: "CodepipelineRoleArn"
       Artifacts:
         ArtifactIdentifier: "APP"
         Type: "CODEPIPELINE"
@@ -133,7 +133,7 @@ Resources:
         Type: S3
       Name: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-deployment-${Region}
       RoleArn:
-        Ref: "BuildRoleArn"
+        Ref: "CodepipelineRoleArn"
       Stages:
         - Name: Source
           Actions:
@@ -178,8 +178,8 @@ Resources:
               Configuration:
                 ActionMode: CREATE_UPDATE
                 Capabilities: 'CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND'
-                RoleArn: !Ref DeployRoleArn
-                StackName: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-Deploy-ci-${Region}
+                RoleArn: !Ref MyLambdaRoleArn
+                StackName: !Sub ${ProjectName}-Deploy-ci-${Region}
                 TemplateConfiguration: 'APP::config/ci/params.json'
                 TemplatePath: 'APP::packaged-template.yaml'
               InputArtifacts:
@@ -225,7 +225,7 @@ Resources:
       Authentication: GITHUB_HMAC
       TargetPipeline: !Ref DeploymentPipeline
       TargetAction: Source
-      Name: !Sub a${AssetInsightId}-${ServiceName}-${ProjectName}-Webhook
+      Name: !Sub ${ProjectName}-Webhook
       TargetPipelineVersion: !GetAtt DeploymentPipeline.Version
       RegisterWithThirdParty: 'true'
 Outputs:
