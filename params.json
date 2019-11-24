@@ -1,0 +1,139 @@
+[
+
+  {
+
+    "ParameterKey": "ArtifactBucket",
+
+    "ParameterValue": "a206082-cws-lambda-activities-artifact"
+
+  },
+
+  {
+
+    "ParameterKey": "DeployRoleArn",
+
+    "ParameterValue": "arn:aws:iam::728493342628:role/a206082-trademark-images-deploy-role"
+
+  },
+
+  {
+
+    "ParameterKey": "BuildRoleArn",
+
+    "ParameterValue": "arn:aws:iam::728493342628:role/a206082-trademark-codebuild"
+
+  },
+
+  {
+
+    "ParameterKey": "AssetInsightId",
+
+    "ParameterValue": "206082"
+
+  },
+
+  {
+
+    "ParameterKey": "ServiceName",
+
+    "ParameterValue": "cws-lambda-activities"
+
+  },
+
+  {
+
+    "ParameterKey": "ProjectName",
+
+    "ParameterValue": "contentworkflow"
+
+  },
+
+  {
+
+    "ParameterKey": "Region",
+
+    "ParameterValue": "use1"
+
+  },
+
+  {
+
+    "ParameterKey": "GitHubProjectName",
+
+    "ParameterValue": "gcs-cws_lambda-activities"
+
+  },
+
+  {
+
+    "ParameterKey": "GitHubSecretName",
+
+    "ParameterValue": "a206082-cws-lambda-activities-github-access-token"
+
+  },
+
+  {
+
+    "ParameterKey": "GitHubSecretKey",
+
+    "ParameterValue": "GitHubSecret"
+
+  },
+
+  {
+
+    "ParameterKey": "OAuthTokenKey",
+
+    "ParameterValue": "GitHubOAuth"
+
+  },
+
+  {
+
+    "ParameterKey": "FinancialIdentifier",
+
+    "ParameterValue": "66497"
+
+  },
+
+  {
+
+    "ParameterKey": "AccountId",
+
+    "ParameterValue": "728493342628"
+
+  },
+
+  {
+
+    "ParameterKey": "NonProdVpcId",
+
+    "ParameterValue": "vpc-0f764130ae77a739a"
+
+  },
+
+  {
+
+    "ParameterKey": "NonProdPrivateSubnets",
+
+    "ParameterValue": "subnet-0dc37b546c6bf1809, subnet-0969f0b55c3431ecb, subnet-0a4a0403c40e136c5"
+
+  },
+
+  {
+
+    "ParameterKey": "ResourceOwner",
+
+    "ParameterValue": "swapna.kaladhar@thomsonreuters.com"
+
+  },
+
+  {
+
+    "ParameterKey": "EnvironmentType",
+
+    "ParameterValue": "DEVELOPMENT"
+
+  }
+
+]
